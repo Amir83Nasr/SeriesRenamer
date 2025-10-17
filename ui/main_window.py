@@ -23,10 +23,11 @@ class SeriesRenamerApp(TkinterDnD.Tk):
         self.minsize(500, 400)
         self.style = ttk.Style("darkly")
 
-        # State
+        # --- State ---
         self.root_folder = None
         self.series_name = ttk.StringVar()
         self.allowed_exts = ttk.StringVar(value=".mkv,.srt,.mka,.mp4")
+        self.include_season = ttk.BooleanVar(value=True)  # ✅ برای کنترل نمایش فصل
 
         self.setup_ui()
         self.register_drag_drop()
@@ -52,6 +53,16 @@ class SeriesRenamerApp(TkinterDnD.Tk):
             text="Select Folder",
             command=self.choose_folder,
             bootstyle="secondary-outline",
+        ).pack(side=LEFT, padx=10)
+
+        # ✅ Checkbox برای نمایش یا حذف شماره فصل
+        options_frame = ttk.Frame(self)
+        options_frame.pack(pady=(0, 5))
+        ttk.Checkbutton(
+            options_frame,
+            text="Include Season Number (e.g. S01 E01)",
+            variable=self.include_season,
+            bootstyle="round-toggle",
         ).pack(side=LEFT, padx=10)
 
         # Buttons
@@ -87,20 +98,6 @@ class SeriesRenamerApp(TkinterDnD.Tk):
         self.dnd_bind("<<Drop>>", self.on_drop)
 
     # ---------------- Logic ----------------
-
-    def rename_files_in_folder(folder: Path, series_name: str, season_number=None):
-        for file in folder.iterdir():
-            if file.is_file():
-                s, e = parse_season_episode(file.name)
-                if s and e:
-                    season_number = s
-                    episode_number = e
-                else:
-                    # اگر تشخیص نداد، از شمارنده استفاده کن
-                    episode_number = get_next_episode_number(folder)
-
-                new_name = f"{series_name} S{season_number:02d} E{episode_number:02d}{file.suffix}"
-                file.rename(folder / new_name)
 
     def choose_folder(self):
         folder = filedialog.askdirectory()
@@ -142,10 +139,16 @@ class SeriesRenamerApp(TkinterDnD.Tk):
             x.strip().lower() for x in self.allowed_exts.get().split(",") if x.strip()
         ]
         total = 0
+        include_season = self.include_season.get()
+
         for s_idx, season in enumerate(find_season_folders(self.root_folder), start=1):
             season_num = s_idx if season != self.root_folder else 1
             pairs, preview_lines = prepare_rename_map_for_season(
-                season, self.series_name.get().strip(), season_num, allowed
+                season,
+                self.series_name.get().strip(),
+                season_num,
+                allowed,
+                include_season=include_season,  # ✅ استفاده از مقدار چک‌باکس
             )
 
             if not preview_lines:
@@ -161,11 +164,17 @@ class SeriesRenamerApp(TkinterDnD.Tk):
         allowed = [
             x.strip().lower() for x in self.allowed_exts.get().split(",") if x.strip()
         ]
+        include_season = self.include_season.get()
         total = 0
+
         for s_idx, season in enumerate(find_season_folders(self.root_folder), start=1):
             season_num = s_idx if season != self.root_folder else 1
             pairs, preview_lines = prepare_rename_map_for_season(
-                season, self.series_name.get().strip(), season_num, allowed
+                season,
+                self.series_name.get().strip(),
+                season_num,
+                allowed,
+                include_season=include_season,
             )
             for old, new in pairs:
                 old.rename(new)
@@ -179,7 +188,6 @@ class SeriesRenamerApp(TkinterDnD.Tk):
         self.preview_box.insert("end", "🧹 Logs cleared.\n")
 
     def reset_app(self):
-        """بازگشت به حالت اولیه"""
         self.series_name.set("")
         self.root_folder = None
         self.preview_box.delete("1.0", END)
