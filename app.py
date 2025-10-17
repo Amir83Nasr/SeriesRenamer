@@ -1,5 +1,5 @@
-from ui.main_window import SeriesRenamerApp
+from ui.window import RenomicApp
 
 if __name__ == "__main__":
-    app = SeriesRenamerApp()
+    app = RenomicApp()
     app.mainloop()

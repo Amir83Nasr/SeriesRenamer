@@ -1,0 +1,6 @@
+PRIMARY = "#bdff1b"
+SECONDARY = "#000000"
+SUCCESS = "#2ca02c"
+DANGER = "#d62728"
+BACKGROUND = "#121212"
+FOREGROUND = "#ffffff"

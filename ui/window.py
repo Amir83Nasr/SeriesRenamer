@@ -8,14 +8,14 @@ from tkinterdnd2 import TkinterDnD, DND_FILES
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 
-from core.file_utils import (
+from core.logic import (
     find_season_folders,
     prepare_rename_map_for_season,
     parse_season_episode,
 )
 
 
-class SeriesRenamerApp(TkinterDnD.Tk):
+class RenomicApp(TkinterDnD.Tk):
     def __init__(self):
         super().__init__()
         self.title("🎬 Series Renamer — by Amir83Nasr")
